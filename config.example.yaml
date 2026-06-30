@@ -1,0 +1,46 @@
+# mneme-memory configuration
+# Copy to mneme.yaml and edit as needed
+
+tier: auto  # auto | S | A | B | C
+
+embedding:
+  model: bge-m3
+  model_low: bge-small-zh-v1.5
+  device: auto  # auto | cuda | cpu
+  batch_size: 0  # 0 = auto-detect
+
+retrieval:
+  paths: [semantic, bm25, graph, temporal]
+  paths_low: [semantic, bm25]
+  rrf_k: 60
+  reranker: cross-encoder/ms-marco-MiniLM-L-6-v2
+  reranker_device: auto
+
+reflect:
+  max_rounds: 10
+  max_rounds_low: 2
+  early_exit_confidence: 0.85
+
+consolidation:
+  mode: realtime  # realtime | near_realtime | nightly
+  batch_size: 5
+
+memory:
+  layers: [world, experience, observation, mental_models]
+  emotional_tag: true
+  forgetting: [active, privacy, ebbinghaus, conflict]
+  personality_momentum: 0.95
+
+storage:
+  backend: postgresql
+  vector_extension: pgvector
+  hnsw_ef_search: 200
+  hnsw_m: 16
+  dsn: postgresql://mneme:mneme@localhost:5432/mneme
+
+plugins:
+  embedding: bge_m3
+  reranker: cross_encoder
+  llm: openai_compatible
+  storage: pgvector
+  retrievers: [semantic, bm25, graph, temporal]

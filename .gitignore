@@ -68,6 +68,10 @@ instance/
 # Scrapy stuff:
 .scrapy
 
+# mneme-memory local config (contains credentials, gitignored)
+config.yaml
+mneme.yaml
+
 # Sphinx documentation
 docs/_build/
 
