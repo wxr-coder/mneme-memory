@@ -16,6 +16,7 @@ from mneme_core.models import (
     Link,
     LinkType,
     MemCell,
+    MemoryFilter,
     PrivacyLevel,
     Provenance,
     SearchResult,
@@ -23,6 +24,7 @@ from mneme_core.models import (
 
 __all__ = [
     "MemCell",
+    "MemoryFilter",
     "SearchResult",
     "Link",
     "LinkType",

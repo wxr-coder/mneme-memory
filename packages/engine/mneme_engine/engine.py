@@ -144,7 +144,12 @@ class Engine:
             links = self.plugins.linker.create_links(memory, context=None)
             for link in links:
                 if self.plugins.storage:
-                    await self.plugins.storage.store_link(link)
+                    await self.plugins.storage.create_link(
+                        link.source_id,
+                        link.target_id,
+                        link_type=link.link_type.value,
+                        weight=link.weight,
+                    )
 
         logger.info(
             "engine.retain",

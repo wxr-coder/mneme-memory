@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any
 
 import numpy as np
 
-from mneme_core import Capability, MemCell, SearchResult
+from mneme_core import Capability, MemCell, MemoryFilter, SearchResult
 
 
 class StorageBackend(ABC):
@@ -20,14 +19,20 @@ class StorageBackend(ABC):
 
     @abstractmethod
     async def search_vector(
-        self, query_vec: np.ndarray, top_k: int = 10, filters: dict[str, Any] | None = None
+        self,
+        query_vec: np.ndarray,
+        top_k: int = 10,
+        filters: MemoryFilter | None = None,
     ) -> list[SearchResult]:
         """Vector similarity search."""
         ...
 
     @abstractmethod
     async def search_bm25(
-        self, query: str, top_k: int = 10, filters: dict[str, Any] | None = None
+        self,
+        query: str,
+        top_k: int = 10,
+        filters: MemoryFilter | None = None,
     ) -> list[SearchResult]:
         """Full-text search."""
         ...
@@ -48,8 +53,8 @@ class StorageBackend(ABC):
         ...
 
     @abstractmethod
-    async def update_memory(self, memory_id: str, updates: dict[str, Any]) -> bool:
-        """Update fields on a memory."""
+    async def update_memory(self, memory: MemCell) -> bool:
+        """Persist updates to a memory (e.g. after reconstructive touch)."""
         ...
 
     @abstractmethod

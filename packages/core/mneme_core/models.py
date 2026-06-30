@@ -124,3 +124,40 @@ class Link(BaseModel):
     link_type: LinkType
     weight: float = Field(ge=0.0, le=1.0, default=0.5)
     metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class MemoryFilter(BaseModel):
+    """Filter specification for memory queries.
+
+    Carries classification constraints (fact_type, provenance, privacy)
+    and quality constraints (min_confidence, date range) through the
+    retrieval pipeline in a structured, type-safe way.
+    """
+
+    fact_types: list[FactType] | None = None
+    provenance: list[Provenance] | None = None
+    privacy: list[PrivacyLevel] | None = None
+    min_confidence: float = Field(default=0.0, ge=0.0, le=1.0)
+    since: datetime | None = None
+    until: datetime | None = None
+
+    def matches(self, memory: MemCell) -> bool:
+        """Return True if *memory* satisfies all active constraints."""
+        if self.fact_types and memory.fact_type not in self.fact_types:
+            return False
+        if self.provenance and memory.provenance not in self.provenance:
+            return False
+        if self.privacy and memory.privacy_level not in self.privacy:
+            return False
+        if memory.confidence < self.min_confidence:
+            return False
+        if self.since and memory.last_mentioned_at < self.since:
+            return False
+        return not (self.until and memory.last_mentioned_at > self.until)
+
+    @classmethod
+    def from_fact_types(cls, fact_types: list[str] | None) -> MemoryFilter | None:
+        """Convenience: build a filter from raw fact_type strings."""
+        if not fact_types:
+            return None
+        return cls(fact_types=[FactType(ft) for ft in fact_types])

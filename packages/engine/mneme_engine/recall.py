@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 
 import structlog
 
-from mneme_core import SearchResult
+from mneme_core import MemoryFilter, SearchResult
 
 if TYPE_CHECKING:
     from mneme_engine.engine import Engine
@@ -48,12 +48,15 @@ class RecallPipeline:
             logger.warning("recall.no_retrievers")
             return []
 
-        # 1. Query all retrievers in parallel
+        # Build classification filter from fact_types
+        filters = MemoryFilter.from_fact_types(fact_types)
+
+        # 1. Query all retrievers in parallel, passing the filter through
         # TODO: use asyncio.gather once retrievers are async-capable
         all_results: dict[str, list[SearchResult]] = {}
         for retriever in plugins.retrievers:
             try:
-                results = retriever.search(query, top_k=top_k * 2)  # over-fetch 2x
+                results = retriever.search(query, top_k=top_k * 2, filters=filters)
                 all_results[retriever.name] = results
             except Exception:
                 logger.exception("recall.retriever_error", retriever=retriever.name)
@@ -63,6 +66,10 @@ class RecallPipeline:
 
         # 2. RRF fusion
         fused = self._rrf_fuse(all_results, top_k=top_k * 2)
+
+        # 2b. Post-filter safety net — in case a retriever didn't honour filters
+        if filters:
+            fused = [r for r in fused if filters.matches(r.memory)]
 
         # 3. Rerank if available
         if plugins.reranker and self._engine.tier.has_reranker:

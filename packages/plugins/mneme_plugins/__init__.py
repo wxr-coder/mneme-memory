@@ -9,6 +9,8 @@ from mneme_plugins.interfaces.reranker import Reranker
 from mneme_plugins.interfaces.retriever import Retriever
 from mneme_plugins.interfaces.storage import StorageBackend
 from mneme_plugins.reranker import NullReranker
+from mneme_plugins.retriever import BM25Retriever, SemanticRetriever
+from mneme_plugins.storage import InMemoryStorage
 
 __all__ = [
     "EmbeddingProvider",
@@ -18,4 +20,7 @@ __all__ = [
     "StorageBackend",
     "MemoryLinker",
     "NullReranker",
+    "InMemoryStorage",
+    "SemanticRetriever",
+    "BM25Retriever",
 ]

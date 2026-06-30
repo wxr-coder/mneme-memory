@@ -5,7 +5,7 @@ description = "Minimal demo for mneme-memory"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11"
-dependencies = ["mneme-core"]
+dependencies = ["mneme-core", "mneme-plugins", "mneme-engine"]
 
 [build-system]
 requires = ["hatchling"]

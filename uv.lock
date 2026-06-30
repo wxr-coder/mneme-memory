@@ -720,10 +720,16 @@ version = "0.1.0"
 source = { editable = "demos/quickstart" }
 dependencies = [
     { name = "mneme-core" },
+    { name = "mneme-engine" },
+    { name = "mneme-plugins" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "mneme-core", editable = "packages/core" }]
+requires-dist = [
+    { name = "mneme-core", editable = "packages/core" },
+    { name = "mneme-engine", editable = "packages/engine" },
+    { name = "mneme-plugins", editable = "packages/plugins" },
+]
 
 [[package]]
 name = "mneme-server"
