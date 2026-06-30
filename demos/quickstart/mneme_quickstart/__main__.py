@@ -70,15 +70,17 @@ def main():
 
     print(f"\nStoring {len(memories_data)} memories:")
     for m in memories_data:
-        asyncio.run(engine.retain(
-            content=m.content,
-            fact_type=m.fact_type,
-            provenance=m.provenance,
-            valence=m.emotional_valence.valence,
-            intensity=m.emotional_valence.intensity,
-            emotion_type=m.emotional_valence.emotion_type,
-            confidence=m.confidence,
-        ))
+        asyncio.run(
+            engine.retain(
+                content=m.content,
+                fact_type=m.fact_type,
+                provenance=m.provenance,
+                valence=m.emotional_valence.valence,
+                intensity=m.emotional_valence.intensity,
+                emotion_type=m.emotional_valence.emotion_type,
+                confidence=m.confidence,
+            )
+        )
         print(f"  [{m.fact_type.value:12s}] {m.content}")
 
     # 4. Recall without filter
