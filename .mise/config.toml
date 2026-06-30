@@ -1,0 +1,10 @@
+[tools]
+python = "3.12.11"
+uv = "0.7.20"
+ruff = "0.8.0"
+
+[settings]
+lockfile_platforms = ["linux-x64", "linux-arm64", "macos-arm64"]
+
+[env]
+_.python.venv = { path = ".venv" }

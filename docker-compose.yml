@@ -1,0 +1,23 @@
+services:
+  mneme-server:
+    build: .
+    ports:
+      - "9177:9177"
+    environment:
+      - MNEME_TIER=auto
+    depends_on:
+      - postgres
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: mneme
+      POSTGRES_USER: mneme
+      POSTGRES_PASSWORD: mneme
+    ports:
+      - "5432:5432"
+    volumes:
+      - mneme-pgdata:/var/lib/postgresql/data
+
+volumes:
+  mneme-pgdata:
