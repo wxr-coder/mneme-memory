@@ -1,20 +1,97 @@
 # API Reference
 
-mneme-server exposes a REST API on port 9177.
+## Python SDK (mneme)
 
-## Base URL
+The primary way to use mneme-memory. `pip install mneme`.
 
+### Mneme.embed()
+
+Create an embedded client. Runs the engine in-process — no server needed.
+
+```python
+from mneme import Mneme
+
+mneme = Mneme.embed()                      # auto-loads config.yaml
+mneme = Mneme.embed(config="my.yaml")      # explicit config path
+mneme = Mneme.embed(config=MnemeConfig())  # config object
 ```
-http://localhost:9177
+
+### Mneme.connect()
+
+Create a remote client. Connects to a running mneme-server via HTTP.
+
+```python
+mneme = Mneme.connect("http://localhost:9177")
+mneme = Mneme.connect("http://my-server:9177", timeout=60.0)
 ```
 
-## Endpoints
+### retain()
+
+Store a new memory.
+
+```python
+await mneme.retain(
+    content="User enjoys reading science fiction novels",
+    fact_type="world",            # world | experience | observation | mental_models
+    provenance="user_declared",   # user_declared | inference_backstory | inferred_from_input
+    valence=0.6,                  # -1.0 to 1.0
+    intensity=0.7,                # 0.0 to 1.0
+    emotion_type="joy",
+    confidence=0.90,
+    privacy="private",            # public | private | deep_private
+)
+
+# Sync wrapper (for non-async contexts)
+mneme.retain_sync(content="User likes Python", fact_type="world")
+```
+
+### recall()
+
+Retrieve memories by query.
+
+```python
+results = await mneme.recall(
+    query="What books does the user like?",
+    top_k=10,
+    fact_types=["world", "experience"],  # optional filter
+)
+
+for r in results:
+    print(f"[{r['score']:.3f}] {r['content']}")
+```
+
+### reflect()
+
+Run agentic reflection loop.
+
+```python
+result = await mneme.reflect(
+    query="Recent experiences with the user",
+    top_k=10,
+)
+
+print(f"Rounds: {result['rounds']}")
+print(f"Synthesis: {result['synthesis']}")
+```
+
+### health() / stats()
+
+```python
+health = await mneme.health()
+# {"status": "ok", "mode": "embedded", "tier": "B", "hardware": {...}}
+
+stats = await mneme.stats()
+# {"tier": "B", "has_storage": False, "num_retrievers": 0, ...}
+```
+
+---
+
+## HTTP API (mneme-server)
+
+mneme-server exposes the same operations as REST endpoints on port 9177.
 
 ### GET /health
 
-Returns system health, detected tier, and hardware info.
-
-**Response**:
 ```json
 {
   "status": "ok",
@@ -23,23 +100,14 @@ Returns system health, detected tier, and hardware info.
     "gpu_vram_gb": 4.0,
     "gpu_name": "NVIDIA GeForce GTX 1050",
     "cpu_cores": 6,
-    "ram_gb": 15.5,
-    "has_nvidia": true
+    "ram_gb": 15.5
   },
-  "config": {
-    "tier": "auto",
-    "embedding": "bge-m3"
-  }
+  "config": {"mode": "embedded"}
 }
 ```
 
----
-
 ### POST /retain
 
-Store a new memory.
-
-**Request**:
 ```json
 {
   "content": "User enjoys reading science fiction novels",
@@ -47,150 +115,87 @@ Store a new memory.
   "provenance": "user_declared",
   "valence": 0.6,
   "intensity": 0.7,
-  "emotion_type": "joy"
+  "emotion_type": "joy",
+  "confidence": 0.9,
+  "privacy": "private"
 }
 ```
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `content` | string | required | Memory text |
-| `fact_type` | string | `"experience"` | world / experience / observation / mental_models |
-| `provenance` | string | `"inferred_from_input"` | Trust level |
-| `valence` | float | `0.0` | -1.0 to 1.0 |
-| `intensity` | float | `0.0` | 0.0 to 1.0 |
-| `emotion_type` | string | `"neutral"` | joy, sadness, fear, etc. |
-
-**Response**:
-```json
-{
-  "status": "ok",
-  "message": "Memory stored",
-  "tier": "B",
-  "content_preview": "User enjoys reading science fiction novels"
-}
-```
-
----
 
 ### POST /recall
 
-Retrieve memories by query.
-
-**Request**:
 ```json
 {
   "query": "What books does the user like?",
-  "top_k": 10,
-  "fact_types": ["world", "experience"]
-}
-```
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `query` | string | required | Natural language query |
-| `top_k` | int | `10` | Max results |
-| `fact_types` | string[] | `[]` | Filter by layer (empty = all) |
-
-**Response**:
-```json
-{
-  "status": "ok",
-  "query": "What books does the user like?",
-  "tier": "B",
-  "results": [],
-  "message": "No storage backend configured yet"
-}
-```
-
-*Note: Results will be populated once a StorageBackend plugin is implemented.*
-
----
-
-### POST /reflect
-
-Run agentic reflection loop on a query.
-
-**Request** (same as /recall):
-```json
-{
-  "query": "Recent experiences with the user",
   "top_k": 10,
   "fact_types": []
 }
 ```
 
-**Response**:
-```json
-{
-  "status": "ok",
-  "query": "Recent experiences with the user",
-  "tier": "B",
-  "max_rounds": 3,
-  "message": "No reflect engine configured yet"
-}
-```
+### POST /reflect
 
----
+Same request shape as /recall. Returns synthesis + conflicts + observations.
 
 ### GET /stats
 
-Memory statistics.
-
-**Response**:
 ```json
 {
-  "status": "ok",
   "tier": "B",
-  "total_memories": 0,
-  "message": "No storage backend configured yet"
+  "has_storage": false,
+  "num_retrievers": 0
 }
 ```
 
 ---
 
-## CLI
-
-The CLI tool (`mneme-cli`) provides the same operations from the terminal:
+## CLI (mneme-cli)
 
 ```bash
-# Initialize — show detected hardware and tier
+# Initialize — show detected hardware, tier, and engine stats
 uv run mneme init
 
-# Retain a memory
-uv run mneme retain "User likes Python" --type world
+# Retain a memory (embedded mode)
+uv run mneme retain -c "User likes Python" -t world
 
 # Recall memories
-uv run mneme recall "What programming languages?" --top-k 5
+uv run mneme recall "What programming languages?" -k 5
 
-# Start the server
+# Run reflection
+uv run mneme reflect "User's technical background"
+
+# Connect to remote server
+uv run mneme --remote http://localhost:9177 recall "test"
+
+# Start the API server
 uv run mneme serve
-
-# Show status
-uv run mneme status
 ```
 
-## Python SDK
+---
+
+## Integration Example (for Agent developers)
 
 ```python
-from mneme_core import MemCell, FactType, EmotionalValence, Provenance
-from mneme_core.config import load_config
-from mneme_core.capability import detect_hardware, detect_tier
+from mneme import Mneme
 
-# Load config
-config = load_config("config.yaml")
+# Initialize once
+mneme = Mneme.embed()
 
-# Detect tier
-hw = detect_hardware()
-tier = detect_tier(hw, override=config.tier)
-print(f"Tier: {tier.value}")
-print(f"Retrieval paths: {tier.retrieval_paths}")
+# In your agent's conversation loop:
+async def handle_user_message(user_input: str):
+    # 1. Recall relevant memories
+    memories = await mneme.recall(user_input, top_k=5)
 
-# Create a memory
-memory = MemCell(
-    content="User prefers concise technical responses",
-    fact_type=FactType.OBSERVATION,
-    emotional_valence=EmotionalValence(valence=0.2, intensity=0.3),
-    provenance=Provenance.INFERRED_FROM_INPUT,
-    confidence=0.60,
-)
+    # 2. Build context for your LLM
+    context = "\n".join(f"- {m['content']}" for m in memories)
+
+    # 3. Generate response (your own LLM)
+    response = await your_llm.generate(user_input, context=context)
+
+    # 4. Store the interaction as a memory
+    await mneme.retain(
+        content=f"User said: {user_input}",
+        fact_type="experience",
+        provenance="user_declared",
+    )
+
+    return response
 ```

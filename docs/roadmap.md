@@ -8,8 +8,10 @@
 - [x] Config system: MnemeConfig + load_config() with YAML
 - [x] Plugin interfaces: 6 abstract base classes
 - [x] NullReranker: built-in fallback for TIER B/C
-- [x] mneme-server: FastAPI skeleton (health/retain/recall/reflect/stats)
-- [x] mneme-cli: Click CLI skeleton (init/retain/recall/serve/status)
+- [x] Engine: recall pipeline (RRF + touch), reflect loop, consolidation, personality
+- [x] SDK: Mneme.embed() + Mneme.connect() dual-mode
+- [x] mneme-server: FastAPI thin wrapper around SDK
+- [x] mneme-cli: Click thin wrapper around SDK
 - [x] Quickstart demo
 - [x] CI: GitHub Actions (ruff + pytest)
 - [x] Docker: Dockerfile + docker-compose with pgvector
@@ -27,16 +29,19 @@
 - [ ] OpenAICompatibleLLM (httpx, supports Ark/OpenAI/Ollama)
 - [ ] EntityLinker (NER-based memory linking)
 
-## Phase 3: Memory Engine
+## Phase 3: Memory Engine Implementation
 
-- [ ] Reconstructive recall pipeline (RRF fusion + touch)
-- [ ] Agentic reflection loop (LLM-driven multi-round)
-- [ ] Consolidation engine (9 rules from hindsight)
+- [ ] Recall pipeline: wire up real retrievers + RRF + touch
+- [ ] Agentic reflection loop: LLM-driven multi-round with anti-hallucination
+- [ ] Consolidation engine: implement 9 rules
   - [ ] Duplicate detection + merge
   - [ ] Ebbinghaus decay scheduler
-  - [ ] Conflict arbitration
+  - [ ] Conflict arbitration (RESOLVABLE / UNRESOLVABLE)
   - [ ] Observation synthesis
-- [ ] Personality momentum evolution
+  - [ ] Link strengthening + pruning
+  - [ ] Emotional decay
+  - [ ] Trend marking (STABLE/STRENGTHENING/WEAKENING/STALE)
+- [ ] Personality momentum evolution (LLM blending)
 - [ ] Cold start initialization (user profile → LLM expansion → seed memories)
 
 ## Phase 4: Plugin Auto-Discovery
@@ -50,7 +55,7 @@
 
 - [ ] All-in-one Docker image (TIER B/C, single container)
 - [ ] Docker Compose stack (TIER A/S, server + PostgreSQL + Ollama)
-- [ ] pip install mneme-memory (TIER C, pure Python)
+- [ ] pip install mneme (TIER C, pure Python, embedded mode)
 - [ ] Helm chart (Kubernetes)
 - [ ] Config UI (web-based)
 
@@ -78,7 +83,8 @@
 | Milestone | Target | Status |
 |-----------|--------|--------|
 | M1: Monorepo + models + skeleton APIs | ✅ | Done |
-| M2: First working retain → recall cycle | Next | — |
-| M3: Reflection + consolidation | — | — |
-| M4: First benchmark pass | — | — |
-| M5: v0.1.0 release | — | — |
+| M2: SDK dual-mode + engine skeleton | ✅ | Done |
+| M3: First working retain → recall cycle | Next | — |
+| M4: Reflection + consolidation | — | — |
+| M5: First benchmark pass | — | — |
+| M6: v0.1.0 release | — | — |

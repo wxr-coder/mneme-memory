@@ -1,7 +1,7 @@
 [project]
-name = "mneme-cli"
+name = "mneme"
 version = "0.1.0"
-description = "CLI tool for mneme-memory"
+description = "mneme-memory SDK — human-like memory for AI agents"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11"
@@ -9,18 +9,16 @@ dependencies = [
     "mneme-core",
     "mneme-plugins",
     "mneme-engine",
-    "mneme",
-    "click>=8.1",
-    "rich>=13.0",
     "httpx>=0.27",
+    "structlog>=24.0",
 ]
 
-[project.scripts]
-mneme = "mneme_cli.cli:main"
+[project.optional-dependencies]
+server = ["mneme-server"]
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["mneme_cli"]
+packages = ["mneme"]

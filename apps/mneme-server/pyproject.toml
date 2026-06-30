@@ -8,6 +8,8 @@ requires-python = ">=3.11"
 dependencies = [
     "mneme-core",
     "mneme-plugins",
+    "mneme-engine",
+    "mneme",
     "fastapi>=0.115",
     "uvicorn>=0.30",
     "structlog>=24.0",

@@ -23,11 +23,16 @@ package = false
 [tool.uv.sources]
 mneme-core = { workspace = true }
 mneme-plugins = { workspace = true }
+mneme-engine = { workspace = true }
+mneme = { workspace = true }
+mneme-server = { workspace = true }
 
 [tool.uv.workspace]
 members = [
     "packages/core",
     "packages/plugins",
+    "packages/engine",
+    "packages/sdk",
     "apps/mneme-server",
     "apps/mneme-cli",
     "demos/quickstart",
@@ -43,7 +48,7 @@ select = ["E", "W", "F", "UP", "B", "SIM", "I", "TID"]
 ignore = ["E501", "TID252"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["mneme_core", "mneme_plugins", "mneme_server", "mneme_cli"]
+known-first-party = ["mneme_core", "mneme_plugins", "mneme_engine", "mneme", "mneme_server", "mneme_cli"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "strict"

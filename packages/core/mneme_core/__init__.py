@@ -4,6 +4,7 @@ __version__ = "0.1.0"
 
 from mneme_core.capability import (
     Capability,
+    HardwareInfo,
     Tier,
     detect_hardware,
     detect_tier,
@@ -30,6 +31,7 @@ __all__ = [
     "PrivacyLevel",
     "EmotionalValence",
     "Capability",
+    "HardwareInfo",
     "Tier",
     "detect_tier",
     "detect_hardware",

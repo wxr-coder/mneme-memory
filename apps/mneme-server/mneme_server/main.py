@@ -1,4 +1,9 @@
-"""FastAPI application for mneme-memory server."""
+"""FastAPI application for mneme-memory server.
+
+This is a thin HTTP wrapper around the mneme SDK.
+All business logic lives in mneme-engine; the server just translates
+HTTP requests into SDK calls.
+"""
 
 from __future__ import annotations
 
@@ -8,8 +13,7 @@ import structlog
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
 
-from mneme_core.capability import detect_hardware, detect_tier
-from mneme_core.config import load_config
+from mneme import Mneme
 
 logger = structlog.get_logger()
 
@@ -21,6 +25,9 @@ class RetainRequest(BaseModel):
     valence: float = 0.0
     intensity: float = 0.0
     emotion_type: str = "neutral"
+    confidence: float = 0.5
+    privacy: str = "private"
+    metadata: dict | None = None
 
 
 class RecallRequest(BaseModel):
@@ -38,14 +45,13 @@ class HealthResponse(BaseModel):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    config = load_config()
-    hardware = detect_hardware()
-    tier = detect_tier(hardware, override=config.tier)
-    logger.info("mneme-memory starting", tier=tier.value, hardware=hardware.to_dict())
-    app.state.config = config
-    app.state.tier = tier
-    app.state.hardware = hardware
+    """Initialize the embedded Mneme client on startup."""
+    mneme = Mneme.embed()
+    app.state.mneme = mneme
+    health = await mneme.health()
+    logger.info("mneme-server starting", tier=health["tier"], mode=health["mode"])
     yield
+    logger.info("mneme-server shutting down")
 
 
 app = FastAPI(
@@ -58,58 +64,62 @@ app = FastAPI(
 
 @app.get("/health", response_model=HealthResponse)
 async def health():
+    """System health, detected tier, and hardware info."""
+    data = await app.state.mneme.health()
     return HealthResponse(
-        status="ok",
-        tier=app.state.tier.value,
-        hardware=app.state.hardware.to_dict(),
-        config={"tier": app.state.config.tier, "embedding": app.state.config.embedding.model},
+        status=data["status"],
+        tier=data["tier"],
+        hardware=data["hardware"],
+        config={"mode": data["mode"]},
     )
 
 
 @app.post("/retain")
 async def retain(req: RetainRequest):
     """Store a new memory."""
-    return {
-        "status": "ok",
-        "message": "Memory stored",
-        "tier": app.state.tier.value,
-        "content_preview": req.content[:100],
-    }
+    return await app.state.mneme.retain(
+        content=req.content,
+        fact_type=req.fact_type,
+        provenance=req.provenance,
+        valence=req.valence,
+        intensity=req.intensity,
+        emotion_type=req.emotion_type,
+        confidence=req.confidence,
+        privacy=req.privacy,
+        metadata=req.metadata,
+    )
 
 
 @app.post("/recall")
 async def recall(req: RecallRequest):
     """Retrieve memories by query."""
+    results = await app.state.mneme.recall(
+        query=req.query,
+        top_k=req.top_k,
+        fact_types=req.fact_types or None,
+    )
     return {
         "status": "ok",
         "query": req.query,
-        "tier": app.state.tier.value,
-        "results": [],
-        "message": "No storage backend configured yet",
+        "results": results,
     }
 
 
 @app.post("/reflect")
 async def reflect(req: RecallRequest):
     """Run agentic reflection loop."""
-    return {
-        "status": "ok",
-        "query": req.query,
-        "tier": app.state.tier.value,
-        "max_rounds": app.state.tier.reflect_max_rounds,
-        "message": "No reflect engine configured yet",
-    }
+    return await app.state.mneme.reflect(
+        query=req.query,
+        top_k=req.top_k,
+        fact_types=req.fact_types or None,
+    )
 
 
 @app.get("/stats")
 async def stats():
     """Memory statistics."""
-    return {
-        "status": "ok",
-        "tier": app.state.tier.value,
-        "total_memories": 0,
-        "message": "No storage backend configured yet",
-    }
+    data = await app.state.mneme.stats()
+    return {"status": "ok", **data}
 
 
 def run():

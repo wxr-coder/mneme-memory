@@ -37,23 +37,36 @@ mneme-memory/
 │   │       ├── capability.py   # Tier detection, HardwareInfo, Capability
 │   │       └── config.py       # MnemeConfig + load_config()
 │   │
-│   └── plugins/           # mneme-plugins: 6 plugin interfaces + built-ins
-│       └── mneme_plugins/
-│           ├── interfaces/     # Abstract base classes
-│           │   ├── embedding.py
-│           │   ├── retriever.py
-│           │   ├── reranker.py
-│           │   ├── llm.py
-│           │   ├── storage.py
-│           │   └── linker.py
-│           └── reranker/
-│               └── null_reranker.py   # Built-in: TIER B/C fallback
+│   ├── plugins/           # mneme-plugins: 6 plugin interfaces + built-ins
+│   │   └── mneme_plugins/
+│   │       ├── interfaces/     # Abstract base classes
+│   │       │   ├── embedding.py
+│   │       │   ├── retriever.py
+│   │       │   ├── reranker.py
+│   │       │   ├── llm.py
+│   │       │   ├── storage.py
+│   │       │   └── linker.py
+│   │       └── reranker/
+│   │           └── null_reranker.py   # Built-in: TIER B/C fallback
+│   │
+│   ├── engine/           # mneme-engine: memory engine (the brain)
+│   │   └── mneme_engine/
+│   │       ├── engine.py        # Engine orchestrator + PluginBundle
+│   │       ├── recall.py        # RRF fusion + reconstructive touch
+│   │       ├── reflect.py       # Agentic reflection loop
+│   │       ├── consolidate.py   # 9 consolidation rules
+│   │       └── personality.py   # Momentum-based personality evolution
+│   │
+│   └── sdk/              # mneme: user-facing SDK (pip install mneme)
+│       └── mneme/
+│           ├── __init__.py      # from mneme import Mneme
+│           └── client.py        # Mneme + EmbeddedBackend + RemoteBackend
 │
 ├── apps/
-│   ├── mneme-server/      # FastAPI HTTP server (port 9177)
+│   ├── mneme-server/      # FastAPI HTTP server (thin wrapper around SDK)
 │   │   └── mneme_server/main.py
 │   │
-│   └── mneme-cli/         # Click CLI tool
+│   └── mneme-cli/         # Click CLI (thin wrapper around SDK)
 │       └── mneme_cli/cli.py
 │
 ├── demos/
@@ -75,25 +88,57 @@ mneme-memory/
 
 ```
 mneme-core (base library — no deps on other workspace members)
-├── mneme-plugins → depends on mneme-core
-└── apps/*
-    ├── mneme-server → depends on mneme-core, mneme-plugins
-    ├── mneme-cli    → depends on mneme-core, mneme-plugins
-    └── mneme-quickstart → depends on mneme-core
+    ↑
+mneme-plugins (depends on mneme-core)
+    ↑
+mneme-engine (depends on mneme-core + mneme-plugins)
+    ↑
+mneme / SDK (depends on mneme-engine + mneme-core + mneme-plugins)
+    ↑
+apps (mneme-server, mneme-cli) — thin wrappers around SDK
 ```
 
-**Rule**: apps depend on packages; packages may depend on core; packages
-should NOT depend on apps.
+**Rule**: apps depend on sdk; sdk depends on engine; engine depends on
+core + plugins; plugins depends on core; core depends on nothing internal.
+No reverse dependencies.
+
+## Dual-Mode SDK
+
+The key architectural decision: **SDK first, server second**.
+
+Unlike hindsight (which requires a running server), mneme-memory supports
+two modes with the same API:
+
+```python
+from mneme import Mneme
+
+# Mode 1: Embedded — no server needed, runs in-process
+mneme = Mneme.embed()
+mneme.retain("User likes Python")
+results = mneme.recall("User preferences?")
+
+# Mode 2: Remote — connect to a running mneme-server
+mneme = Mneme.connect("http://localhost:9177")
+mneme.retain("User likes Python")
+```
+
+Both modes share the same `Backend` protocol:
+- `EmbeddedBackend` → calls Engine directly in-process
+- `RemoteBackend` → HTTP calls to mneme-server
+
+This means users can `pip install mneme` and start using it immediately
+without deploying a server. When they need to scale, they switch to
+`Mneme.connect(...)` and deploy mneme-server.
 
 ## Data Flow: Retain → Consolidate → Recall
 
 ```
-User input
+User input (via SDK or HTTP)
     │
     ▼
 ┌──────────┐     ┌────────────────┐     ┌──────────────┐
 │ Retain   │────▶│ EmbeddingProvider │──▶│ StorageBackend│
-│ (API/CLI)│     │ .embed(texts)     │   │ .store_memory │
+│ (SDK)    │     │ .embed(texts)     │   │ .store_memory │
 └──────────┘     └────────────────┘     └──────────────┘
                                                │
                                     MemoryLinker │
@@ -110,7 +155,7 @@ User input
          │  personality momentum update                   │
          └──────────────────────────────────────────────┘
 
-Recall request
+Recall request (via SDK or HTTP)
     │
     ▼
 ┌──────────────┐   ┌──────────────┐   ┌──────────────┐
@@ -173,3 +218,14 @@ personality = momentum × old + (1 - momentum) × new
 
 Every plugin declares a `Capability` — the system uses the **weakest plugin**
 (木桶效应 / barrel effect) to determine the effective tier.
+
+## Package Responsibilities
+
+| Package | Import name | Depends on | Role |
+|---------|-------------|------------|------|
+| core | `mneme_core` | (stdlib + pydantic) | Models, config, tier detection |
+| plugins | `mneme_plugins` | core | 6 abstract interfaces + built-in impls |
+| engine | `mneme_engine` | core + plugins | Recall, reflect, consolidate, personality |
+| sdk | `mneme` | engine + core + plugins | User-facing API: `Mneme.embed()` / `Mneme.connect()` |
+| server | `mneme_server` | sdk | FastAPI HTTP wrapper |
+| cli | `mneme_cli` | sdk | Click CLI wrapper |
