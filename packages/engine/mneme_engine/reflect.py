@@ -4,7 +4,7 @@ The reflect loop retrieves memories, feeds them to an LLM, and iterates:
 the LLM can request more recall, identify contradictions, or synthesize
 new observations. The loop is bounded by tier.reflect_max_rounds.
 
-Inspired by hindsight's reflect agent:
+Design principles:
 - 6-step reasoning chain
 - Anti-hallucination rules (only use retrieved facts)
 - Conflict arbitration (RESOLVABLE vs UNRESOLVABLE)

@@ -4,7 +4,7 @@ Memory engine for mneme-memory. Contains the core business logic:
 
 - **Recall pipeline** — multi-path retrieval + RRF fusion + reconstructive touch
 - **Reflection loop** — agentic, LLM-driven multi-round synthesis
-- **Consolidation engine** — 9 rules from hindsight (duplicate merge, Ebbinghaus decay, conflict arbitration, etc.)
+- **Consolidation engine** — 9 rules (duplicate merge, Ebbinghaus decay, conflict arbitration, etc.)
 - **Personality evolution** — momentum-based personality update
 
 ## Usage

@@ -106,7 +106,7 @@ No reverse dependencies.
 
 The key architectural decision: **SDK first, server second**.
 
-Unlike hindsight (which requires a running server), mneme-memory supports
+Unlike systems that require a running server, mneme-memory supports
 two modes with the same API:
 
 ```python
@@ -181,7 +181,7 @@ Recall request (via SDK or HTTP)
 
 ## Three-Field Timestamp Model
 
-Every `MemCell` has three timestamps (inspired by hindsight):
+Every `MemCell` has three timestamps:
 
 | Field | Meaning | Updated when |
 |-------|---------|-------------|

@@ -20,4 +20,4 @@ uv run mneme-server
 uv run uvicorn mneme_server.main:app --reload
 ```
 
-Default port: 9177 (same as hindsight for familiarity).
+Default port: 9177.

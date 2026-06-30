@@ -16,7 +16,7 @@ from pydantic import BaseModel, Field
 
 
 class FactType(StrEnum):
-    """Four-layer memory classification (from hindsight)."""
+    """Four-layer memory classification."""
 
     WORLD = "world"  # External world facts
     EXPERIENCE = "experience"  # Agent's own experiences
@@ -25,7 +25,7 @@ class FactType(StrEnum):
 
 
 class LinkType(StrEnum):
-    """Seven memory link types (from hindsight)."""
+    """Seven memory link types."""
 
     TEMPORAL = "temporal"  # Sequential ordering
     SEMANTIC = "semantic"  # Meaning similarity
@@ -80,13 +80,13 @@ class MemCell(BaseModel):
     privacy_level: PrivacyLevel = Field(default=PrivacyLevel.PRIVATE)
     confidence: float = Field(ge=0.0, le=1.0, default=0.5)
 
-    # Timestamps (from hindsight's three-field model)
+    # Timestamps (three-field model for reconstructive recall)
     mentioned_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     last_mentioned_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     last_accessed: datetime | None = Field(default=None)
     access_count: int = Field(default=0)
 
-    # Trend (from hindsight: STABLE/STRENGTHENING/WEAKENING/NEW/STALE)
+    # Trend marking (STABLE/STRENGTHENING/WEAKENING/NEW/STALE)
     trend: str = Field(default="NEW")
 
     # Consolidation metadata

@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 logger = structlog.get_logger()
 
-# Reciprocal Rank Fusion constant (same as hindsight)
+# Reciprocal Rank Fusion constant
 RRF_K = 60
 
 

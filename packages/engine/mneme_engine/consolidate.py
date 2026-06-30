@@ -1,4 +1,4 @@
-"""Consolidation engine — 9 rules from hindsight.
+"""Consolidation engine — 9 rules.
 
 Consolidation runs periodically (realtime / near_realtime / nightly depending
 on tier) to maintain memory quality:

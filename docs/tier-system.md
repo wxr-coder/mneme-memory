@@ -69,7 +69,7 @@ that are expensive on large memory stores. In TIER B (limited VRAM) and C
 (no GPU), the cost-benefit ratio is too low — semantic + BM25 + temporal
 covers >90% of recall quality at a fraction of the cost.
 
-## Benchmark Targets (from hindsight research)
+## Benchmark Targets
 
 | Tier | LongMemEval | LoCoMo | Notes |
 |------|-------------|--------|-------|
@@ -78,4 +78,4 @@ covers >90% of recall quality at a fraction of the cost.
 | B | ~78% | ~82% | 3-way, no reranker |
 | C | ~70% | ~78% | 2-way, minimal |
 
-Sources: hindsight paper (arXiv 2512.12818), LongMemEval, LoCoMo benchmarks.
+Sources: LongMemEval, LoCoMo benchmarks.
