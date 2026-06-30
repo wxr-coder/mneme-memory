@@ -51,7 +51,7 @@ class StorageConfig(BaseModel):
 
 class PluginsConfig(BaseModel):
     embedding: str = "bge_m3"
-    reranker: str = "cross_encoder"
+    reranker: str | None = "cross_encoder"
     llm: str = "openai_compatible"
     storage: str = "pgvector"
     retrievers: list[str] = Field(default_factory=lambda: ["semantic", "bm25", "graph", "temporal"])
